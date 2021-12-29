@@ -1,0 +1,25 @@
+{
+  "name": "sbox-auth-next",
+  "version": "1.0.0",
+  "description": "NextJS Authentication using SaaSBox",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/getsaasbox/sbox-auth-next.git"
+  },
+  "keywords": [
+    "saas",
+    "authentication",
+    "nextjs",
+    "saasbox"
+  ],
+  "author": "Team SaaSBox",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/getsaasbox/sbox-auth-next/issues"
+  },
+  "homepage": "https://github.com/getsaasbox/sbox-auth-next#readme"
+}
