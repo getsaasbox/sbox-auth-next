@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 import { serialize } from 'cookie';
 
-let SAASBOX_DOMAIN = "http://saasbox.net:8081";
+let SAASBOX_DOMAIN = process.env.SAASBOX_DOMAIN ? process.env.SAASBOX_DOMAIN : "http://saasbox.net:8081";
 let LOGIN_URL = SAASBOX_DOMAIN + "/login";
 let JWT_ROUTE = "/api/user-token-otc";
 let JWT_URL = SAASBOX_DOMAIN + JWT_ROUTE;
@@ -12,7 +12,7 @@ let JWT_URL = SAASBOX_DOMAIN + JWT_ROUTE;
 // Init object:
 // User must configure SAASBOX_DOMAIN
 //
-export function init(config) {
+function init(config) {
   if (config.SAASBOX_DOMAIN == undefined) {
     if (process.env.SAASBOX_DOMAIN) {
       console.log("No SaaSBox domain provided, using environment variable:", process.env.SAASBOX_DOMAIN);
@@ -68,6 +68,7 @@ async function fetchJWT(url, otc) {
       throw new Error("Fetching User JWT for OTC failed.");
     }
   } catch(err) {
+  	console.error(err);
     throw new Error(err);
   }
 }
@@ -90,8 +91,9 @@ async function setCookieJWT(req, res, token) {
       maxAge: 1800000, // 30 minutes
     });
 }
+/* This is not ready yet */
 /*
-const withSboxAuth = (handler) => {
+const withSboxAuthClient = (handler) => {
   return async (req, res) => {
       let otc = await getOTC(req)
       let token;
@@ -251,4 +253,4 @@ export async function withSboxAuth(handler) => {
 	}
 }
 
-//export default withSboxAuth;
+export default withSboxAuth;
