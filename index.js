@@ -181,7 +181,7 @@ const redirect = function(url) {
 }
 
 // Only for getServerSideProps which gets a ctx argument.
-export async function withSboxAuth(handler) => {
+const withSboxAuth = async (handler) => {
 	return async (ctx) => {
 		let req = ctx.req;
 		let res = ctx.res;
