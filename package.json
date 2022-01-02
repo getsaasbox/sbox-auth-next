@@ -1,8 +1,9 @@
 {
   "name": "sbox-auth-next",
-  "version": "1.0.4",
+  "version": "1.0.8",
   "description": "NextJS Authentication using SaaSBox",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

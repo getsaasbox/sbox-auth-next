@@ -8,11 +8,26 @@ let LOGIN_URL = SAASBOX_DOMAIN + "/login";
 let JWT_ROUTE = "/api/user-token-otc";
 let JWT_URL = SAASBOX_DOMAIN + JWT_ROUTE;
 
+// Use as an API handler, the component posts to it from a form to logout.
+export function LogoutApi(req, res) {
+  let options = {
+    path: "/",
+    expires: new Date(0)  // Set to 1970 valid date format.
+  }
+  try {
+    // Expire auth cookie and redirect to "/"
+    res.setHeader('Set-Cookie', serialize("user_auth", "deleted", options))
+    res.redirect("/")
+  } catch (err) {
+    console.log("Failed to expire auth cookie:", err);
+  }
+}
+
 //
 // Init object:
 // User must configure SAASBOX_DOMAIN
 //
-function init(config) {
+export function init(config) {
   if (config.SAASBOX_DOMAIN == undefined) {
     if (process.env.SAASBOX_DOMAIN) {
       console.log("No SaaSBox domain provided, using environment variable:", process.env.SAASBOX_DOMAIN);
@@ -181,7 +196,7 @@ const redirect = function(url) {
 }
 
 // Only for getServerSideProps which gets a ctx argument.
-const withSboxAuth = async (handler) => {
+const withSboxAuth = (handler) => {
 	return async (ctx) => {
 		let req = ctx.req;
 		let res = ctx.res;
