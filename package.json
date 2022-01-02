@@ -1,6 +1,6 @@
 {
   "name": "sbox-auth-next",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "NextJS Authentication using SaaSBox",
   "main": "index.js",
   "type": "module",
