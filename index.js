@@ -239,7 +239,7 @@ const withSboxAuth = (handler) => {
                 httpOnly: true,
                 sameSite: process.env.NODE_ENV == 'production' ? 'none' : 'Lax',
                 secure: process.env.NODE_ENV === 'production' ? true : false,
-                maxAge: process.env.NODE_ENV === 'production' ? 51843000 : 15 // 60 days or 15 seconds
+                maxAge: process.env.NODE_ENV === 'production' ? 51843000 : 1000 * 60 * 60 // 60 days or 15 seconds
               })
             );
             return handler(ctx.req, ctx.res);
