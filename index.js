@@ -8,6 +8,37 @@ let LOGIN_URL = SAASBOX_DOMAIN + "/login";
 let JWT_ROUTE = "/api/user-token-otc";
 let JWT_URL = SAASBOX_DOMAIN + JWT_ROUTE;
 
+let JWT_REFRESH_ROUTE = "/api/refreshTokenByUserId";
+let JWT_REFRESH_URL = SAASBOX_DOMAIN + JWT_USERID_ROUTE;
+
+var userNeedsUpdate = {};
+
+// Saves state that user state is changed and JWT needs refreshing.
+// user state changed webhook from SaaSBox calls this.
+export function userStateChanged(req, res, user_hash) {
+  //console.log("userStateChanged called\n")
+  if (req.body.id) {
+    //console.log("updating state with id. req.body:", req.body);
+    userNeedsUpdate[req.body.id] = true;
+  }
+}
+
+// Tells whether the user state has changed and JWT needs refreshing.
+// Call this to re-do token.
+export function hasUserStateChanged(user_struct) {
+  if (userNeedsUpdate[user_struct.id] == true) {
+    //console.log("User needs updating\n");
+    userNeedsUpdate[user_struct.id] = undefined
+    return true;
+  } else {
+    return false;
+  }
+}
+
+export function refreshSession(req, res) {
+  console.log("Should refresh the session token here.")
+}
+
 // Use as an API handler, the component posts to it from a form to logout.
 export function LogoutApi(req, res) {
   let options = {
@@ -106,63 +137,7 @@ async function setCookieJWT(req, res, token) {
     maxAge: 1800000, // 30 minutes
   });
 }
-/* This is not ready yet */
-/*
-const withSboxAuthClient = (handler) => {
-  return async (req, res) => {
-      let otc = await getOTC(req)
-      let token;
-      let user_struct = {};
-      try {
-        if (req.cookies && req.cookies.user_auth) {
-          token = req.cookies.user_auth;
-          // console.log("Found JWT cookie, validating.")
-          user_struct = validateToken(req, token);
-          // Auth OK, set user
-          //console.log("Setting valid user")
-          req.user = user_struct;
-          // Go to next
-          return handler(req, res);
-        } else {
-          //console.log("No JWT cookie, see if OTC is there.")
-          if (otc) {
-            // Get JWT
-            //console.log("OTC is there, fetching JWT with otc=", otc)
-            token = await fetchJWT(JWT_URL, otc);
-            if (token) {
-              // Verify JWT
-              user_struct = await validateToken(req, token);
-              // Set Cookie - this doesn't work, cant use returned cookie
-              // await setCookieJWT(req, res, token);
-              
-              // Auth OK, set user:
-              //console.log("Setting valid user")
-              req.user = user_struct;
-              // Go to next
-              //console.log("Set the cookie with JWT info")
-              return res.cookie("user_auth", token, {
-                httpOnly: true,
-                sameSite: process.env.NODE_ENV == 'production' ? 'none' : 'Lax',
-                secure: process.env.NODE_ENV === 'production' ? true : false,
-                maxAge: 1800000, // 30 minutes
-              });
-            }
-          } else {
-           // No OTC, No Auth. Redirect to main app for authentication
-           //console.log("No JWT, no cookie, no OTC, redirecting.")
-           return res.redirect(LOGIN_URL);
-          }
-        }
-      // All errors in try caught here. Ends up in auth redirect.
-      } catch (error) {
-        // We could handle this by showing auth_error for 5 seconds
-        // Then redirecting to saasbox.
-        //console.log(error);
-        return handler(req, res);
-      }
-  }
-}
-*/
+
 
 /*
  * Returns decoded user from already authenticated JWT cookie, does this for
@@ -211,6 +186,9 @@ const withSboxAuth = (handler) => {
         user_struct = await validateToken(req, token);
         // Auth OK, set user
         //console.log("Setting valid user")
+        if (hasUserStateChanged(user_struct)) {
+          refreshSession(req, res);
+        }
         req.user = user_struct;
         // Go to next
         return handler(ctx.req, ctx.res);
