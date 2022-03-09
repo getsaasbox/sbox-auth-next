@@ -2,33 +2,51 @@ import { promisify } from 'util';
 import jwt from 'jsonwebtoken';
 
 import { serialize } from 'cookie';
+import Redis from 'ioredis';
 
 let SAASBOX_DOMAIN = process.env.SAASBOX_DOMAIN ? process.env.SAASBOX_DOMAIN : "http://saasbox.net:8081";
 let LOGIN_URL = SAASBOX_DOMAIN + "/login";
 let JWT_ROUTE = "/api/user-token-otc";
 let JWT_URL = SAASBOX_DOMAIN + JWT_ROUTE;
+let SAASBOX_REDIS = "rediss://:2df668554aac4b3481b20dd206c3b536@usw1-honest-earwig-32833.upstash.io:32833";
 
-var userNeedsUpdate = {};
+//var userNeedsUpdate = {};
+
+function userState(){
+  console.log("userNeedsUpdate:", userNeedsUpdate);
+}
+
+//setInterval(userState, 1000);
 
 // Saves state that user state is changed and JWT needs refreshing.
 // user state changed webhook from SaaSBox calls this.
-export function userStateChanged(req, res, user_hash) {
+export async function userStateChanged(req, res) {
+  let client = new Redis(SAASBOX_REDIS);
   console.log("userStateChanged called\n")
+  //console.log("userNeedsUpdate: ", userNeedsUpdate);
   if (req.body.id) {
-    //console.log("updating state with id. req.body:", req.body);
-    userNeedsUpdate[req.body.id] = true;
+    console.log("updating state with id. req.body:", req.body);
+    //userNeedsUpdate[req.body.id] = true;
+    await client.set(req.body.id, true);
   }
+  //console.log("after: userNeedsUpdate: ", userNeedsUpdate);
+  console.log("after:", await client.get(req.body.id))
 }
 
 // Tells whether the user state has changed and JWT needs refreshing.
 // Call this to re-do token.
-export function hasUserStateChanged(user_struct) {
-  if (userNeedsUpdate[user_struct.id] == true) {
-    console.log("User needs updating\n");
-    userNeedsUpdate[user_struct.id] = undefined
-    console.log("userNeedsUpdate:", userNeedsUpdate)
+async function hasUserStateChanged(user_struct) {
+  let client = new Redis(SAASBOX_REDIS);
+  let result = await client.get(user_struct.id)
+  console.log("hasUserStateChanged: userNeedsUpdate:", result)
+  //if (userNeedsUpdate[user_struct.id] == true) {
+  if (result == "true") {
+    console.log("User needs updating\n", result);
+    //userNeedsUpdate[user_struct.id] = undefined
+    await client.del(user_struct.id);
     return true;
   } else {
+    console.log("user does not need updating,\n", result)
     return false;
   }
 }
@@ -216,15 +234,20 @@ const withSboxAuth = (handler) => {
         user_struct = await validateToken(req, token);
         // Auth OK, set user
         //console.log("Setting valid user")
-        if (hasUserStateChanged(user_struct)) {
+        if (await hasUserStateChanged(user_struct)) {
           // Same user but updated struct.
-          console.log("Calling refresh session with existing otc\n")
-          user_struct = await refreshSession(ctx, req, res, user_struct.otc);
+          console.log("Calling refresh session with one in query params, or existing otc in JWT\n")
+          user_struct = await refreshSession(ctx, req, res, otc ? otc : user_struct.otc);
+          req.user = user_struct;
+          console.log("we have a session, calling handler\n")
+          // Go to next
+          return handler(ctx.req, ctx.res);
+        } else {
+          req.user = user_struct;
+          console.log("we have a session, calling handler\n")
+          // Go to next
+          return handler(ctx.req, ctx.res);
         }
-        req.user = user_struct;
-        console.log("we have a session, calling handler\n")
-        // Go to next
-        return handler(ctx.req, ctx.res);
       } else {
         console.log("No JWT cookie, see if OTC is there.")
         if (otc) {

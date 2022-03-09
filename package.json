@@ -25,6 +25,7 @@
   "homepage": "https://github.com/getsaasbox/sbox-auth-next#readme",
   "dependencies": {
     "cookie": "^0.4.1",
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "ioredis": "^4.28.5"
   }
 }
