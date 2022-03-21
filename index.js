@@ -4,10 +4,10 @@ import jwt from 'jsonwebtoken';
 import { serialize } from 'cookie';
 import Redis from 'ioredis';
 
-let SAASBOX_DOMAIN = process.env.SAASBOX_DOMAIN ? process.env.SAASBOX_DOMAIN : "http://saasbox.net:8081";
-let LOGIN_URL = SAASBOX_DOMAIN + "/login";
+let NEXT_PUBLIC_SAASBOX_DOMAIN = process.env.NEXT_PUBLIC_SAASBOX_DOMAIN ? process.env.NEXT_PUBLIC_SAASBOX_DOMAIN : "http://saasbox.net:8081";
+let LOGIN_URL = NEXT_PUBLIC_SAASBOX_DOMAIN + "/login";
 let JWT_ROUTE = "/api/user-token-otc";
-let JWT_URL = SAASBOX_DOMAIN + JWT_ROUTE;
+let JWT_URL = NEXT_PUBLIC_SAASBOX_DOMAIN + JWT_ROUTE;
 // Redis access string, e.g. "rediss://:<values>.upstash.io:32833";
 let SAASBOX_REDIS = process.env.SAASBOX_REDIS
 
@@ -85,18 +85,18 @@ export function LogoutApi(req, res) {
 
 //
 // Init object:
-// User must configure SAASBOX_DOMAIN
+// User must configure NEXT_PUBLIC_SAASBOX_DOMAIN
 //
 export function init(config) {
-  if (config.SAASBOX_DOMAIN == undefined) {
-    if (process.env.SAASBOX_DOMAIN) {
-      console.log("No SaaSBox domain provided, using environment variable:", process.env.SAASBOX_DOMAIN);
-      SAASBOX_DOMAIN = process.env.SAASBOX_DOMAIN;
+  if (config.NEXT_PUBLIC_SAASBOX_DOMAIN == undefined) {
+    if (process.env.NEXT_PUBLIC_SAASBOX_DOMAIN) {
+      console.log("No SaaSBox domain provided, using environment variable:", process.env.NEXT_PUBLIC_SAASBOX_DOMAIN);
+      NEXT_PUBLIC_SAASBOX_DOMAIN = process.env.NEXT_PUBLIC_SAASBOX_DOMAIN;
     }
     console.error("You must set your SaaSBox domain in format [https://yourdomain.saasbox.net] in order to use this authentication method.")
     return false;
   } else {
-    SAASBOX_DOMAIN = config.SAASBOX_DOMAIN;
+    NEXT_PUBLIC_SAASBOX_DOMAIN = config.NEXT_PUBLIC_SAASBOX_DOMAIN;
   }
 
   // This is optional, default is more correct than any user supplied.
